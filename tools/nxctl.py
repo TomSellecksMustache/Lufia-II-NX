@@ -43,6 +43,20 @@ BAD_SEGMENTS = {'build', '.cache', 'roms', 'generated', 'assets-src', 'private',
 class GateError(RuntimeError):
     pass
 
+# WYZE_NX_BRANDING_060: only these owned publisher images are permitted.
+APPROVED_BRANDING = {
+  'assets/wyzecorp-logo.png': 'ab2bfd07fac8a476aac8a7534bbf446113dcb901459bf28a805f0acbd73e85d8',
+  'assets/wyzecorp-publisher.png': '5d72a053570e36a31637978231a2390875977f2f1d2f1f890c8c7b986f6cdfa8',
+}
+def approved_branding(rel, file):
+    name=rel.as_posix()
+    if name not in APPROVED_BRANDING: return False
+    if file.is_symlink() or not file.is_file() or file.stat().st_size > 64000:
+        raise GateError(f'Invalid branding asset: {name}')
+    if hashlib.sha256(file.read_bytes()).hexdigest() != APPROVED_BRANDING[name]:
+        raise GateError(f'Changed branding asset: {name}')
+    return True
+
 def run(*args, cwd=None, capture=False):
     print('+', ' '.join(str(a) for a in args), flush=True)
     kwargs = dict(cwd=str(cwd or ROOT), check=True)
@@ -91,6 +105,7 @@ def audit():
     tracked = git_files()
     if not tracked: raise GateError('Git index/files absent: initialize repository first')
     for rel in tracked:
+        if approved_branding(rel, ROOT / rel): continue
         if rel.suffix.lower() in BAD_SUFFIX or any(x.lower() in BAD_SEGMENTS for x in rel.parts):
             raise GateError(f'Forbidden publishable path: {rel}')
         f = ROOT / rel
@@ -107,6 +122,7 @@ def audit():
         history = command('git', 'log', '--all', '--pretty=format:', '--name-only')
         for name in history.splitlines():
             path = pathlib.Path(name.strip())
+            if path.as_posix() in APPROVED_BRANDING: continue
             if name.strip() and (path.suffix.lower() in BAD_SUFFIX or any(x.lower() in BAD_SEGMENTS for x in path.parts)):
                 raise GateError(f'Forbidden historical commit path: {name}; create a clean repo (do not force-push)')
     except subprocess.CalledProcessError:
