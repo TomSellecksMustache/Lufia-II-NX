@@ -19,7 +19,7 @@ CFLAGS += -D__SWITCH__ $(INCLUDE) `sdl2-config --cflags`
 CXXFLAGS := $(CFLAGS) -fno-rtti -fno-exceptions
 ASFLAGS := -g $(ARCH)
 LDFLAGS = -specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
-LIBS := `sdl2-config --libs`
+LIBS := `sdl2-config --libs` -lm
 LIBDIRS := $(PORTLIBS) $(LIBNX)
 ifneq ($(BUILD),$(notdir $(CURDIR)))
 export OUTPUT := $(CURDIR)/$(TARGET)
