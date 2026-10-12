@@ -1,11 +1,9 @@
-# Lufia II NX — v0.6.0
+# SiNXstrals 0.6.6
 
-Our first native Lufia II build has been tested running on a Nintendo Switch.
+SiNXstrals is the native Lufia II homebrew project for Nintendo Switch, maintained by WyzeCorp.
 
-**What works:** the game boots, gameplay responds to Switch controls, the original soundtrack plays, and the new queue-ahead audio implementation prevents the continuous music distortion reported in earlier builds. This release also adds a WyzeCorp publisher screen before the game.
+This release updates the project name and build documentation for Ubuntu and Docker.
 
-**Known limitations:** occasional music stutter; save/load and lengthy gameplay not comprehensively validated; the intended true 720p widescreen and pixel-perfect presentation are still under development.
+**Source-only release:** The existing native executable is generated partly from privately supplied game code. No ROM, generated game code, game assets, or compiled game NRO is distributed with this release. Build locally using your own legitimate copy of the game and a prepared private workspace.
 
-**For developers:** this GitHub release includes source only. Bring your own clean USA `.sfc` and build locally using the supported dev environment. No ROM, generated ROM code, or game executable is attached to this public release.
-
-Thanks to Cellenseres, SNESRecomp, SDL3, devkitPro, and their respective contributors. Not affiliated with Nintendo or the original game rights holders.
+Standalone development continues independently on the `standalone` branch, starting at 0.1.0.
