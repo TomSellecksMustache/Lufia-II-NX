@@ -1,4 +1,4 @@
-# v0.0.2
+# v0.1.0
 
-Private ROM fingerprint validation and local storage isolation
+Native Switch graphics/controller/audio diagnostic NRO
 
