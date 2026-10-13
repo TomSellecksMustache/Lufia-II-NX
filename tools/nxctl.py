@@ -48,8 +48,15 @@ APPROVED_BRANDING = {
   'assets/wyzecorp-logo.png': 'ab2bfd07fac8a476aac8a7534bbf446113dcb901459bf28a805f0acbd73e85d8',
   'assets/wyzecorp-publisher.png': '5d72a053570e36a31637978231a2390875977f2f1d2f1f890c8c7b986f6cdfa8',
 }
+# SINX_V060_BRANDING_AUDIT: canonical user artwork only; historical JPG never restored.
+APPROVED_BRANDING.update({
+    'assets/SiNXstrals.png': '4c16ad3cf6bd8956bd1cdbf3673e871ff8f001e800526b65e47ac123bec14dcc',
+    'assets/sinxstrals-v051-icon.jpg': 'HISTORICAL_ONLY',
+})
 def approved_branding(rel, file):
     name=rel.as_posix()
+    if name == 'assets/sinxstrals-v051-icon.jpg':
+        raise GateError('Legacy JPG prohibited in current tree')
     if name not in APPROVED_BRANDING: return False
     if file.is_symlink() or not file.is_file() or file.stat().st_size > 64000:
         raise GateError(f'Invalid branding asset: {name}')

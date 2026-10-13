@@ -61,7 +61,7 @@ static bool sinx_confirm_yes;
 static bool sinx_widescreen_fill=true;
 static bool sinx_minus_latched;
 static uint64_t sinx_minus_started;
-static bool sinx_pixel_scale = true, sinx_shader = false;
+static bool sinx_pixel_scale = false, sinx_shader = false;
 static char sinx_menu_status[40] = "";
 static uint64_t sinx_menu_status_until;
 static SDL_Window *sinx_output_window;
@@ -301,7 +301,7 @@ static void sinx_menu_paint(SDL_Renderer *r) {
     sinx_text(r,"SINXSTRALS",447,190,4,244,214,136);
     sinx_text(r,sinx_menu_options?"OPTIONS":"GAME MENU",438,264,3,252,246,206);
     const char *main_opts[3]={"SAVE STATE","LOAD STATE","OPTIONS"};
-    const char *sub_opts[4]={"PIXEL SMOOTH","SHADERS","16:9 FILL","BACK"};
+    const char *sub_opts[4]={"PIXEL SMOOTH","SHADERS","NATIVE 16:9","BACK"};
     int n=sinx_menu_options?4:3;
     for (int i=0;i<n;i++) {
         int y=337+i*43;
@@ -422,7 +422,7 @@ static void sinx_menu_input(void) {
                     sinx_v051_debug("SHADER toggle=%d via menu",(int)sinx_shader);
                 } else if (sinx_menu_selection==2) {
                     sinx_widescreen_fill=!sinx_widescreen_fill;
-                    sinx_notice(sinx_widescreen_fill?"16:9 FILL ON":"16:9 FILL OFF");
+                    sinx_notice(sinx_widescreen_fill?"NATIVE 16:9 ON":"NATIVE 16:9 OFF");
                     sinx_v051_debug("16:9 fill=%d",(int)sinx_widescreen_fill);
                 } else {sinx_menu_options=false;sinx_menu_selection=0;}
             }
@@ -479,7 +479,8 @@ static bool sinx_v050_draw(SDL_Renderer *r,SDL_Texture *tex,
         oldw=w;oldh=h;oldmode=(int)sinx_widescreen_fill;
         oldsmooth=(int)sinx_pixel_scale;
     }
-    return SDL_RenderTexture(r,tex,src,&dst);
+    SDL_FRect sinx_native_4x3={43.f,0.f,256.f,224.f};
+    return SDL_RenderTexture(r,tex,src?src:(sinx_widescreen_fill?NULL:&sinx_native_4x3),&dst);
 }
 
 static bool sinx_v050_present(SDL_Renderer *r) {

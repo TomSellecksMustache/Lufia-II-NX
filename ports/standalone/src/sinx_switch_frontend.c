@@ -1,3 +1,4 @@
+/* SINX_V053_WIDE_LAYOUT: scene-aware 342x224 PPU integration */
 /* SINX_V051_GUARDED_REPAIR frontend audio probe */
 /* SINX_STANDALONE_SWITCH_012: first standalone ROM-at-runtime Switch frontend.
  * Includes the same game-neutral interpreter/hardware reference driver that
@@ -15,6 +16,56 @@
 
 /* SINX_V050_MENU_GPU_SAVE_V1 */
 #include "sinx_v050_overlay.inc"
+#include "sinx_native_video_policy.c"
+/* SINX_V060_WORLD_SHADOW */
+#include "sinx_v060_map_margin.inc"
+/* SINX_V053_PPU342: native-style 342x224 source width, 43 genuine margin pixels
+ * per side. Game-neutral 65816, APU, SRAM, and savestate remain unchanged.
+ * The source PPU must be the extended renderer shipped with SNESRecomp.
+ * Regular map margin data remains experimental until full native map resolver
+ * (VRAM shadow + authored room data) is integrated. */
+#define SINX_V053_WIDE_WIDTH 342
+#define SINX_V053_WIDE_EXTRA 43
+#define SINX_V053_WIDE_PITCH (SINX_V053_WIDE_WIDTH * 4)
+static uint8_t sinx_v053_pixels[SINX_V053_WIDE_PITCH * 240];
+static Lufia2VideoLayout sinx_v053_last_layout=LUFIA2_VIDEO_LAYOUT_COUNT;
+static void sinx_v053_video_begin_frame(void) {
+    Lufia2VideoLayout layout =
+        Lufia2SelectVideoLayout(g_ppu,sinx_widescreen_fill);
+    if(layout==LUFIA2_VIDEO_BLANK &&
+       sinx_v053_last_layout!=LUFIA2_VIDEO_LAYOUT_COUNT)
+        layout=sinx_v053_last_layout;
+    /* Never carry a layer mask from the previous menu into the map. */
+    PpuSetWidescreenLayerMask(g_ppu,0);
+    PpuSetWidescreenBg3Widen(g_ppu,0);
+    bool map_wide=false;
+    bool map_selected=sinx_widescreen_fill &&
+        layout==LUFIA2_VIDEO_REGULAR_MAP;
+    if(map_selected) map_wide=sinx_v060_prepare_map();
+    else sinx_v060_disarm();
+    if(!sinx_widescreen_fill) {
+        PpuSetExtraSpaceCentered(g_ppu,SINX_V053_WIDE_EXTRA);
+    } else if(layout==LUFIA2_VIDEO_WORLD_MAP) {
+        PpuSetExtraSpace(g_ppu,SINX_V053_WIDE_EXTRA);
+        PpuSetWidescreenWindowExpansion(g_ppu,0x31u,0x03u);
+    } else if(!map_wide) {
+        /* Menus, interiors, loading and unverified maps: centered 4:3.
+           No scene fragments may reappear across the opposite gutter. */
+        PpuSetExtraSpaceCentered(g_ppu,SINX_V053_WIDE_EXTRA);
+    }
+    uint8_t status=map_wide?1u:(map_selected?2u:0u);
+    if(status!=sinx_v060_last_status || layout!=sinx_v053_last_layout) {
+        sinx_v051_debug("VIDEO_060_NO_WRAP layout=%s status=%s width=342 extra=43",
+                        Lufia2VideoLayoutName(layout),
+                        map_wide?"map-shadow":(map_selected?"safe-fallback":"scene-policy"));
+        sinx_v060_last_status=status;
+        sinx_v053_last_layout=layout;
+    }
+    memset(sinx_v053_pixels,0,SINX_V053_WIDE_PITCH*224);
+    PpuBeginDrawing(g_ppu,sinx_v053_pixels,SINX_V053_WIDE_PITCH,
+                    kPpuRenderFlags_NewRenderer);
+}
+
 
 /* SINX_STANDALONE_VIDEO_RESCUE_V1
  * The Switch frontend owns one streaming texture and one SDL3 renderer.
@@ -244,7 +295,7 @@ static int sinx_initialize_runtime(void) {
     }
     snes_reset(g_snes,true);
     s_render_video=true;
-    PpuBeginDrawing(g_ppu,s_video_pixels,kVideoPitch,0);
+    /* Drawing target initialized per frame by sinx_v053_video_begin_frame(). */
     g_ref_cpu=sinx_v050_interp_init(NULL,bus_read,bus_write);
     if (!g_ref_cpu) return -1;
     interp816_set_brk_hook_enabled(g_ref_cpu,false);
@@ -266,7 +317,7 @@ int main(int argc,char **argv) {
     if (!s_renderer) { sinx_log(SDL_GetError()); return 1; }
     SDL_SetRenderVSync(s_renderer,1);
     s_picture=SDL_CreateTexture(s_renderer,SDL_PIXELFORMAT_XRGB8888,
-                                SDL_TEXTUREACCESS_STREAMING,256,224);
+                                SDL_TEXTUREACCESS_STREAMING,SINX_V053_WIDE_WIDTH,224);
     if (!s_picture) { sinx_log(SDL_GetError()); return 1; }
     SDL_SetTextureScaleMode(s_picture,SDL_SCALEMODE_NEAREST);
     /* XRGB data is opaque even though the source high byte is zero. */
@@ -299,13 +350,14 @@ int main(int argc,char **argv) {
         if (!s_pad) sinx_controller_open();
         g_snes->input1_currentState=sinx_button_state();
         uint64_t emu_begin=SDL_GetTicksNS();
+        sinx_v053_video_begin_frame();
         if (!run_one_frame()) { sinx_log("[SINX] CPU frame guard exceeded"); break; }
         uint64_t emu_elapsed=SDL_GetTicksNS()-emu_begin;
         perf_emu_ns+=emu_elapsed;
         if (emu_elapsed>perf_max_ns) perf_max_ns=emu_elapsed;
         perf_frame_count++;
         sinx_audio_output();
-        if (!sinx_rescue_upload(s_picture,NULL,s_video_pixels,kVideoPitch)) {
+        if (!sinx_rescue_upload(s_picture,NULL,sinx_v053_pixels,SINX_V053_WIDE_PITCH)) {
             sinx_log("[SINX VIDEO] SDL_UpdateTexture failed");
             sinx_log(SDL_GetError()); break;
         }
@@ -323,8 +375,8 @@ int main(int argc,char **argv) {
         if (perf_frame_count>=60) {
             uint64_t end=SDL_GetTicksNS();
             uint32_t active_pixels=0;
-            for (size_t i=0;i<(size_t)kVideoWidth*kVideoHeight;i++) {
-                if (((const uint32_t*)s_video_pixels)[i]&0x00ffffffu) active_pixels++;
+            for (size_t i=0;i<(size_t)SINX_V053_WIDE_WIDTH*224;i++) {
+                if (((const uint32_t*)sinx_v053_pixels)[i]&0x00ffffffu) active_pixels++;
             }
             double secs=(double)(end-perf_start)/1000000000.0;
             double fps=secs>0.0 ? (double)perf_frame_count/secs : 0.0;
