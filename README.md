@@ -1,4 +1,4 @@
-# SiNXstrals — Standalone
+# SiNXstrals
 
 [![SiNXstrals stable release v0.6.5](https://img.shields.io/badge/stable-v0.6.5-brightgreen)](https://github.com/TomSellecksMustache/SiNXstrals/releases/tag/standalone-v0.6.5)
 
@@ -23,11 +23,3 @@ Game is 100% playable, just working out some minor bugs.
 I have a gameplay overhaul planned for once that's under control.
 
 Unofficial fan project; not affiliated with Nintendo or the original publisher.
-
-## v0.6.5 — Town-scroll and launch credits
-
-- 342×224 scene-aware widescreen rendered at 1280×720. Town scrolling restores the original guard-band map tiles for each draw, then safely restores guest VRAM and window state.
-- The original Lufia II legal/title card keeps a pure black background and displays the 128-pixel WyzeCorp pixel logo below the licensing text. The logo is embedded inside the NRO.
-- Overworld, cave, and interior rendering, audio, controls, and saves otherwise retain the established standalone behavior.
-- The installation ZIP contains the NRO and instructions only; **no artwork folder or ROM**.
-
