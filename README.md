@@ -3,8 +3,6 @@
 [![Stable release 0.6.2](https://img.shields.io/badge/release-0.6.2-brightgreen)](https://github.com/TomSellecksMustache/SiNXstrals/releases/tag/standalone-v0.6.2)
 
 
-![SiNXstrals](assets/sinxstrals-v051-icon.jpg)
-
 A standalone Nintendo Switch homebrew runtime for **Lufia II**. Bring your own compatible `lufia2.sfc` ROM. No game files or saves are distributed.
 
 ## Install
@@ -14,15 +12,15 @@ Get the standalone ZIP from [Releases](https://github.com/TomSellecksMustache/Si
 ## Features
 
 - Hold **−** for two seconds for the in-game menu. **A** confirms; **B** cancels.
-- Save State and Load State with confirmation; repeated quick saves replace the previous state.
-- Options: **16:9 Fill**, **Pixel Smooth**, **Shaders**. **R + R3** toggles shaders anywhere.
-- **16:9 Fill** is on by default. It draws the SNES image across the full 1280×720 screen **by stretching it**, not by rendering additional world outside the original SNES picture. Turning it off gives an aspect-correct 4:3 viewport. Docked output can use the same adaptive rendering path in the future.
-- Pixel Smooth changes between linear and nearest-neighbour GPU sampling. Existing HD-2D shader integration is retained.
+- Save State and Load State.
+- Options: Under Construction
+- 16:9 720p
+- Pixel Smooth changes between linear and nearest-neighbour GPU sampling: Under Construction
+- Octopath shaders 🤷‍♂️
 
 ## Building and status
 
-**v0.5.2 is a hardware-test prerelease.** The published source is a snapshot of a local devkitPro/libnx, SDL3 and SNESRecomp build, not yet a clean-checkout reproducible build. The older `scripts/standalone.sh` is a development placeholder and does not reproduce this release.
-
-Audio slowdown is being investigated, not claimed fixed. Switch log: `sdmc:/switch/SiNXstrals/v051-debug.log` (look for `VIDEO_052` and audio counters). Game ROM not included. Third-party licenses remain with their respective projects.
+Game is 100% playable, just working out some minor bugs. 
+I have a gameplay overhaul planned for once that's under control.
 
 Unofficial fan project; not affiliated with Nintendo or the original publisher.
