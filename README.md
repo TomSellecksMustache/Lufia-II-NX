@@ -1,6 +1,7 @@
 # SiNXstrals — Standalone
 
-[![Standalone release](https://img.shields.io/github/v/release/TomSellecksMustache/SiNXstrals?filter=standalone-v*&label=standalone)](https://github.com/TomSellecksMustache/SiNXstrals/releases)
+[![Stable release 0.6.2](https://img.shields.io/badge/release-0.6.2-brightgreen)](https://github.com/TomSellecksMustache/SiNXstrals/releases/tag/standalone-v0.6.2)
+
 
 ![SiNXstrals](assets/sinxstrals-v051-icon.jpg)
 
