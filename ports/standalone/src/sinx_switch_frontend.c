@@ -19,6 +19,10 @@
 #include "sinx_native_video_policy.c"
 /* SINX_V060_WORLD_SHADOW */
 #include "sinx_v060_map_margin.inc"
+/* SINX_V065_TOWN_AND_CREDITS */
+#include "sinx_v065_town_guard.inc"
+#include "sinx_v065_credit_pixels.inc"
+#include "sinx_v065_credit_logo.inc"
 /* SINX_V053_PPU342: native-style 342x224 source width, 43 genuine margin pixels
  * per side. Game-neutral 65816, APU, SRAM, and savestate remain unchanged.
  * The source PPU must be the extended renderer shipped with SNESRecomp.
@@ -351,7 +355,10 @@ int main(int argc,char **argv) {
         g_snes->input1_currentState=sinx_button_state();
         uint64_t emu_begin=SDL_GetTicksNS();
         sinx_v053_video_begin_frame();
-        if (!run_one_frame()) { sinx_log("[SINX] CPU frame guard exceeded"); break; }
+        sinx_v065_render_begin();
+        if (!run_one_frame()) { sinx_v065_render_end(); sinx_log("[SINX] CPU frame guard exceeded"); break; }
+        sinx_v065_render_end();
+        sinx_v065_credit_detect(sinx_v053_pixels);
         uint64_t emu_elapsed=SDL_GetTicksNS()-emu_begin;
         perf_emu_ns+=emu_elapsed;
         if (emu_elapsed>perf_max_ns) perf_max_ns=emu_elapsed;
@@ -368,6 +375,7 @@ int main(int argc,char **argv) {
             sinx_log("[SINX VIDEO] SDL_RenderTexture failed");
             sinx_log(SDL_GetError()); break;
         }
+        sinx_v065_draw_credit(s_renderer);
         if (!sinx_v050_present(s_renderer)) {
             sinx_log("[SINX VIDEO] SDL_RenderPresent failed");
             sinx_log(SDL_GetError()); break;
